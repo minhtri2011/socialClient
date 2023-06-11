@@ -1,24 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
-
+import { ThemeProvider } from "@mui/system";
+import { RouterProvider } from "react-router-dom";
+// import "./App.css";
+import routers from "./routers/index";
+import CssBaseline from "@mui/material/CssBaseline";
+import customTheme from "./themes";
+import { useMemo, useState } from "react";
+import { createTheme } from "@mui/material";
+import { useSelector } from "react-redux";
+import { selectorDarkMode } from "./redux/slice/themeSlice";
+import { Toaster } from 'react-hot-toast';
 function App() {
+  // const [mode,setMode]=useState('light')
+  const mode = useSelector(selectorDarkMode)
+  const theme = useMemo(()=>createTheme(customTheme(mode)),[mode]);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <RouterProvider router={routers} />
+      <Toaster />
+    </ThemeProvider>
   );
 }
 
