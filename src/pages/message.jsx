@@ -29,50 +29,68 @@ const ListConversation = ({ setRoom }) => {
   const { id } = useParams();
 
   useEffect(() => {
+    if (!user.user._id) return;
     (async () => {
       try {
-        // await createConversation([id, user.user._id], user.token);
         const response = await getAllConversations(user.user._id, user.token);
-
-        const conversationsFilter = conversations.find((conversation) => {
-          const memberId = conversation.members.map((member) => member._id);
-          return memberId.includes(id) && memberId.includes(user.user._id);
-        });
-
-        console.log(conversationsFilter);
-
-        console.log(response);
-        setConversations(response);
+        const sortConversations = response?.sort(
+          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+        );
+        setConversations(sortConversations);
       } catch (error) {
         console.log(error);
       }
     })();
   }, []);
 
-  // useEffect(() => {
-  //   if (id) {
-  //     if (conversations) {
-  //       const conversationsFilter = conversations.find((conversation) => {
-  //         const memberId = conversation.members.map((member) => member._id);
-  //         return memberId.includes(id) && memberId.includes(user.user._id);
-  //       });
-  //       setRoom(conversationsFilter._id);
-  //       socket.emit("joinRoom", conversationsFilter._id);
-  //     }
-  //   }
-  // }, [id, conversations]);
+  useEffect(() => {
+    (async () => {
+      if (conversations === null || conversations.length === 0) return;
+
+      if (!user.user._id && !id) return;
+
+      const filteredConversations = conversations.filter((conversation) => {
+        const memberIds = conversation.members.map((member) => member._id);
+        return memberIds.includes(id) && memberIds.includes(user.user._id);
+      });
+      if (!!filteredConversations.length) return;
+
+      try {
+        const response = await createConversation(
+          [id, user.user._id],
+          user.token
+        );
+        console.log(response);
+        setConversations((v) => [...v, response]);
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+  }, [conversations]);
+
+  useEffect(() => {
+    if (id) {
+      if (!conversations || conversations.length === 0) return;
+      const conversationsFilter = conversations.find((conversation) => {
+        const memberId = conversation.members.map((member) => member._id);
+        return memberId.includes(id) && memberId.includes(user.user._id);
+      });
+      setRoom(conversationsFilter._id);
+      socket.emit("joinRoom", conversationsFilter._id);
+    }
+  }, [id, conversations]);
 
   return (
     <>
       {conversations?.map((conversation) => {
-        const userMessage = conversation.members.find(
+        const userMessage = conversation?.members.find(
           (member) => member._id !== user.user._id
         );
         return (
           <ListItem
             component={NavLink}
             to={`/message/${userMessage._id}`}
-            key={conversation._id}
+            key={conversation?._id}
             sx={{
               padding: "10px",
               margin: "5px 0",
@@ -135,6 +153,7 @@ const ListMessage = ({ room }) => {
   useEffect(() => {
     socket.on("receiveMessage", (message) => {
       setMessages((prev) => [...prev, message]);
+      console.log(message);
       scrollToBottom();
     });
     return () => socket.off();
@@ -260,6 +279,10 @@ const ListMessage = ({ room }) => {
         onSubmit={sendMessage}
         padding="5px"
         backgroundColor={theme.palette.background.alt}
+        position={"fixed"}
+        bottom={0}
+        right={0}
+        left={0}
       >
         {id && (
           <Box position="relative" paddingBottom="10px">
@@ -281,7 +304,7 @@ const Message = () => {
     <Box
       display="grid"
       gridTemplateColumns={"20% 80%"}
-      height={"100vh"}
+      height={"100vh)"}
       overflow={"hidden"}
     >
       <Paper

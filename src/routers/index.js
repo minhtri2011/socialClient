@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { Outlet, createBrowserRouter } from "react-router-dom";
 import Home from "../pages/home";
 import Login from "../pages/login";
 import Message from "../pages/message";
@@ -20,16 +20,19 @@ const routers = createBrowserRouter([
     children: [
       { path: "/", element: <Home /> },
       { path: "/user/:id", element: <Profile /> },
-      // { path: "/message", element: <Message /> },
     ],
   },
   {
-    path: "/message/:id?",
+    path: "/message",
     element: (
       <PrivateRoute>
-        <Message />
+        <Outlet />
       </PrivateRoute>
     ),
+    children: [
+      { path: "", element: <Message /> },
+      { path: ":id?", element: <Message /> },
+    ],
   },
   //! auth pages
   {
